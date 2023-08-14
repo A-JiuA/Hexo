@@ -107,3 +107,4 @@ deploy:
   type: git
   repo: git@github.com:A-JiuA/blog.git
   branch: main
+  token: $SSH_PRIVATE_KEY

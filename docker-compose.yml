@@ -1,0 +1,15 @@
+version: '3'
+services:
+    hexo:
+      image: alpine
+      container_name: pusher
+      working_dir: /root
+      volumes:
+        - "./public:/root/public"
+        - "./entrypoint.sh:/entrypoint.sh"
+      stdin_open: true
+      tty:  true
+      environment:
+        - SSH_PRIVATE_KEY=$SSH_PRIVATE_KEY
+        - SOURCE_REPO=$SOURCE_REPO
+      entrypoint: /entrypoint.sh

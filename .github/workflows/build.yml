@@ -9,47 +9,128 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  github:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main
+        with:
+          submodules: true
+      - name: update submodule
+        run: |
+          cd themes/butterfly && git checkout master && git pull
+          cd ../../
+          cd source/source && git pull
+      # - name: Setup Debug Session
+      #   uses: mxschmitt/action-tmate@v3
+      #   env:
+      #     SSH_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
+      #     SOURCE_REPO: git@github.com:A-JiuA/blog.git
+      #   timeout-minutes: 15
+      #   with:
+      #     detached:  
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
       - name: Setup Node.js
-        uses: actions/setup-node  #安装node.js
+        uses: actions/setup-node@v3  #安装node.js
         with:
           node-version: '18'
+      - name: Install Dependencies
+        run: |
+          pip3 install requests wget
       - name: Update
         run: |
-          npm install -g hexo-cli npm-check npm-upgrade
+          npm install -g hexo-cli npm-check
           npm install --save
-          npm-check
-          npm-upgrade
+          npm-check -u
           npm update -g
           npm update --save
-      - name: set private key
+      - name: Get Articles
+        env:
+          API: ${{ secrets.API }}
+          API_KEY: ${{ secrets.API_KEY }}
         run: |
-          echo ${ secrets.GITEE_PRIVATE_KEY } > ~/.ssh/id_rsa
+          python3 getArticles.py
       - name: Generate
         run: |
           hexo cl
           hexo g
       - name: Push to Github
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
+          SOURCE_REPO: git@github.com:A-JiuA/blog.git
         run: |
-          hexo d
-      - name: Generate(Gitee)
+          chmod +x entrypoint.sh
+          docker-compose up && docker rm pusher
+      - name: Commit
+        run: |
+          git config --global user.email github-actions[bot]@users.noreply.github.com
+          git config --global user.name github-actions[bot]
+          if [[ -n $(git status --porcelain) ]]
+          then
+            git add .
+            git commit -m 'update modules'
+            git push
+          else
+            echo "Nothing to commit."
+          fi
+  gitee:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+        with:
+          submodules: true
+      - name: update submodule
+        run: |
+          cd themes/butterfly && git checkout master && git pull
+          cd ../../
+          cd source/source && git pull
+      # - name: Setup Debug Session
+      #   uses: mxschmitt/action-tmate@v3
+      #   env:
+      #     SSH_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
+      #     SOURCE_REPO: git@github.com:A-JiuA/blog.git
+      #   timeout-minutes: 15
+      #   with:
+      #     detached:  
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Setup Node.js
+        uses: actions/setup-node@v3  #安装node.js
+        with:
+          node-version: '18'
+      - name: Install Dependencies
+        run: |
+          pip3 install requests wget
+      - name: Update
+        run: |
+          npm install -g hexo-cli npm-check
+          npm install --save
+          npm-check -u
+          npm update -g
+          npm update --save
+      - name: Get Articles
+        env:
+          API: ${{ secrets.API }}
+          API_KEY: ${{ secrets.API_KEY }}
+        run: |
+          python3 getArticles.py
+      - name: Generate
         run: |
           sed "s/git@github.com/git@gitee.com/g" _config.yml
           sed "s/A-JiuA.github.io/A-JiuA.gitee.io/g" _config.yml
+          hexo cl
           hexo g
       - name: Push to Gitee
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
+          SOURCE_REPO: git@gitee.com:A-JiuA/blog.git
         run: |
-          hexo d
-    #   - name: Sync to Gitee
-    #     uses: wearerequired/git-mirror-action@master
-    #     env:
-    #       SSH_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
-    #     with:
-    #       source-repo: git@github.com:A-JiuA/blog.git
-    #       destination-repo: git@gitee.com:A-JiuA/blog.git
+          chmod +x entrypoint.sh
+          docker-compose up && docker rm pusher
       - name: Build Gitee Pages
         uses: yanglbme/gitee-pages-action@main
         with:
@@ -70,11 +151,11 @@ jobs:
         run: |
           git config --global user.email github-actions[bot]@users.noreply.github.com
           git config --global user.name github-actions[bot]
-          git add DLLs
-          git commit -m "update modules"
-          git pull
-
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          if [[ -n $(git status --porcelain) ]]
+          then
+            git add .
+            git commit -m 'update modules'
+            git push
+          else
+            echo "Nothing to commit."
+          fi
