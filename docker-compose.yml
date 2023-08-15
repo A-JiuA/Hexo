@@ -6,10 +6,11 @@ services:
       working_dir: /root
       volumes:
         - "./public:/root/public"
+        - "./blog:/root/blog"
         - "./entrypoint.sh:/entrypoint.sh"
       stdin_open: true
       tty:  true
       environment:
         - SSH_PRIVATE_KEY=$SSH_PRIVATE_KEY
-        - SOURCE_REPO=$SOURCE_REPO
+        - TARGET_REPO=$TARGET_REPO
       entrypoint: /entrypoint.sh

@@ -12,11 +12,10 @@ chmod 600 /root/.ssh/id_rsa
 mkdir -p ~/.ssh
 cp /root/.ssh/* ~/.ssh/ 2> /dev/null || true
 echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
-SOURCE_DIR=$(basename "$SOURCE_REPO")
-echo "SOURCE=$SOURCE_REPO"
-git clone "$SOURCE_REPO" "$SOURCE_DIR"
-cp -r "$SOURCE_DIR"/.git public && cd public
+cp -r blog/.git public && cd public
+git remote set-url origin "$TARGET_REPO"
+git fetch -p origin
 git add .
 git commit -m "Site updated: $(date +%F) $(date +%T)"
-git push
+git push -f
 rm -rf .git

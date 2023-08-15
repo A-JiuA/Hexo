@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  github:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main
@@ -52,6 +52,8 @@ jobs:
           API_KEY: ${{ secrets.API_KEY }}
         run: |
           python3 getArticles.py
+      - name: Clone Repository
+        run: git clone --depth=3 https://github.com/A-JiuA/blog.git blog
       - name: Generate
         run: |
           hexo cl
@@ -59,66 +61,11 @@ jobs:
       - name: Push to Github
         env:
           SSH_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
-          SOURCE_REPO: git@github.com:A-JiuA/blog.git
+          TARGET_REPO: git@github.com:A-JiuA/blog.git
         run: |
           chmod +x entrypoint.sh
           docker-compose up && docker rm pusher
-      - name: Commit
-        run: |
-          git config --global user.email github-actions[bot]@users.noreply.github.com
-          git config --global user.name github-actions[bot]
-          if [[ -n $(git status --porcelain) ]]
-          then
-            git add .
-            git commit -m 'update modules'
-            git push
-          else
-            echo "Nothing to commit."
-          fi
-  gitee:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@main
-        with:
-          submodules: true
-      - name: update submodule
-        run: |
-          cd themes/butterfly && git checkout master && git pull
-          cd ../../
-          cd source/source && git pull
-      # - name: Setup Debug Session
-      #   uses: mxschmitt/action-tmate@v3
-      #   env:
-      #     SSH_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
-      #     SOURCE_REPO: git@github.com:A-JiuA/blog.git
-      #   timeout-minutes: 15
-      #   with:
-      #     detached:  
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-      - name: Setup Node.js
-        uses: actions/setup-node@v3  #安装node.js
-        with:
-          node-version: '18'
-      - name: Install Dependencies
-        run: |
-          pip3 install requests wget
-      - name: Update
-        run: |
-          npm install -g hexo-cli npm-check
-          npm install --save
-          npm-check -u
-          npm update -g
-          npm update --save
-      - name: Get Articles
-        env:
-          API: ${{ secrets.API }}
-          API_KEY: ${{ secrets.API_KEY }}
-        run: |
-          python3 getArticles.py
-      - name: Generate
+      - name: Generate(Gitee)
         run: |
           sed "s/git@github.com/git@gitee.com/g" _config.yml
           sed "s/A-JiuA.github.io/A-JiuA.gitee.io/g" _config.yml
@@ -127,7 +74,7 @@ jobs:
       - name: Push to Gitee
         env:
           SSH_PRIVATE_KEY: ${{ secrets.GITEE_PRIVATE_KEY }}
-          SOURCE_REPO: git@gitee.com:A-JiuA/blog.git
+          TARGET_REPO: git@gitee.com:A-JiuA/blog.git
         run: |
           chmod +x entrypoint.sh
           docker-compose up && docker rm pusher
@@ -146,6 +93,7 @@ jobs:
         run: |
           sed "s/git@gitee.com/git@github.com/g" _config.yml
           sed "s/A-JiuA.gitee.io/A-JiuA.github.io/g" _config.yml
+          rm -rf blog
           hexo cl
       - name: Commit
         run: |
