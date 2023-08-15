@@ -53,11 +53,13 @@ jobs:
           API_KEY: ${{ secrets.API_KEY }}
         run: |
           python3 getArticles.py
-      - name: Clone Repository
-        run: git clone --depth=3 https://github.com/A-JiuA/blog.git blog
-      - name: Generate
+      - name: Init Repository
         run: |
           hexo cl
+          mkdir public
+          git init public
+      - name: Generate
+        run: |
           hexo g
       - name: Push to Github
         env:
@@ -66,10 +68,15 @@ jobs:
         run: |
           chmod +x entrypoint.sh
           docker-compose up && docker rm pusher
+      - name: Init Repository
+        run: |
+          cp configs/_config.github.yml _config.yml
+          hexo cl
+          mkdir public
+          git init public
       - name: Generate(Gitee)
         run: |
           cp configs/_config.gitee.yml _config.yml
-          hexo cl
           hexo g
       - name: Push to Gitee
         env:
@@ -92,7 +99,6 @@ jobs:
       - name: reset config
         run: |
           cp configs/_config.github.yml _config.yml
-          rm -rf blog
           hexo cl
       - name: Commit
         run: |

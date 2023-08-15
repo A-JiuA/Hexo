@@ -12,10 +12,10 @@ chmod 600 /root/.ssh/id_rsa
 mkdir -p ~/.ssh
 cp /root/.ssh/* ~/.ssh/ 2> /dev/null || true
 echo "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
-cp -r blog/.git public && cd public
-git remote set-url origin "$TARGET_REPO"
-git fetch -p origin
+cd public
+git remote add origin "$TARGET_REPO"
+git branch -M main
 git add .
 git commit -m "Site updated: $(date +%F) $(date +%T)"
-git push -f
+git push --set-upstream origin main -f
 rm -rf .git
