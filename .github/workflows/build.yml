@@ -17,6 +17,7 @@ jobs:
           submodules: true
       - name: update submodule
         run: |
+          git config --global pull.rebase true
           cd themes/butterfly && git checkout master && git pull
           cd ../../
           cd source/source && git pull
