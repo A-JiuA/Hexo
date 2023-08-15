@@ -68,8 +68,7 @@ jobs:
           docker-compose up && docker rm pusher
       - name: Generate(Gitee)
         run: |
-          sed "s/git@github.com/git@gitee.com/g" _config.yml
-          sed "s/A-JiuA.github.io/A-JiuA.gitee.io/g" _config.yml
+          cp configs/_config.gitee.yml _config.yml
           hexo cl
           hexo g
       - name: Push to Gitee
@@ -92,8 +91,7 @@ jobs:
           branch: main
       - name: reset config
         run: |
-          sed "s/git@gitee.com/git@github.com/g" _config.yml
-          sed "s/A-JiuA.gitee.io/A-JiuA.github.io/g" _config.yml
+          cp configs/_config.github.yml _config.yml
           rm -rf blog
           hexo cl
       - name: Commit
