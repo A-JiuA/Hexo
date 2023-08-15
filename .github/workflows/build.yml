@@ -104,7 +104,7 @@ jobs:
           then
             git add .
             git commit -m 'update modules'
-            git push
+            git push || true
           else
             echo "Nothing to commit."
           fi
