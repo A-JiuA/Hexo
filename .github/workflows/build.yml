@@ -13,14 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main
-        with:
-          submodules: true
-      - name: update submodule
+      - name: Clone submodules
         run: |
-          git config --global pull.rebase true
-          cd themes/butterfly && git checkout master && git pull
-          cd ../../
-          cd source/source && git pull
+          git clone https://github.com/jerryc127/hexo-theme-butterfly -b master themes/butterfly --depth=1
+          git clone https://github.com/A-JiuA/Hexo_source source/source --depth=1
       # - name: Setup Debug Session
       #   uses: mxschmitt/action-tmate@v3
       #   env:
