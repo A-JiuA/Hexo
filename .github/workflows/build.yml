@@ -40,9 +40,10 @@ jobs:
         run: |
           npm install -g hexo-cli npm-check
           npm install --save
-          npm-check -u
-          npm update -g
-          npm update --save
+          #npm-check -u
+          #npm update -g
+          #npm update --save
+          #npm audit fix --force
       - name: Get Articles
         env:
           API: ${{ secrets.API }}
